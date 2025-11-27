@@ -8,7 +8,7 @@ An Azure-themed Monopoly built with HTML/CSS/JavaScript. It maps gameplay to Azu
 - Tech Support Case replaces Jail across UI and cards; Premium Support tax replaces Luxury Tax; Azure Licensing tax for 10% or 200 credits.
 - 100+ architect/AI quiz questions; each is shown only once per session.
 - Scenario-based Chance/Community Chest cards aligned to Azure architecture outcomes.
-- Starting credits set to 2000 per player.
+- Starting credits set to 1500 per player.
 
 ## How to Run
 1. Open `index.html` in your browser.

@@ -93,17 +93,17 @@ function Game() {
 
 		auctionproperty = index;
 		highestbidder = 0;
-		highestbid = 0;
+		highestbid = s.price; // Minimum bid starts at service price
 		currentbidder = turn + 1;
 
 		if (currentbidder > pcount) {
 			currentbidder -= pcount;
 		}
 
-		popup("<div style='font-weight: bold; font-size: 16px; margin-bottom: 10px;'>Auction <span id='propertyname'></span></div><div>Highest Bid = $<span id='highestbid'></span> (<span id='highestbidder'></span>)</div><div><span id='currentbidder'></span>, it is your turn to bid.</div<div><input id='bid' title='Enter an amount to bid on " + s.name + ".' style='width: 291px;' /></div><div><input type='button' value='Bid' onclick='game.auctionBid();' title='Place your bid.' /><input type='button' value='Pass' title='Skip bidding this time.' onclick='game.auctionPass();' /><input type='button' value='Exit Auction' title='Stop bidding on " + s.name + " altogether.' onclick='if (confirm(\"Are you sure you want to stop bidding on this property altogether?\")) game.auctionExit();' /></div>", "blank");
+		popup("<div style='font-weight: bold; font-size: 16px; margin-bottom: 10px;'>Auction <span id='propertyname'></span></div><div>Minimum Bid: $" + s.price + "</div><div>Highest Bid = $<span id='highestbid'></span> (<span id='highestbidder'></span>)</div><div><span id='currentbidder'></span>, it is your turn to bid.</div<div><input id='bid' title='Enter an amount to bid on " + s.name + ". Minimum: $" + s.price + "' style='width: 291px;' placeholder='Min: $" + s.price + "' /></div><div><input type='button' value='Bid' onclick='game.auctionBid();' title='Place your bid.' /><input type='button' value='Pass' title='Skip bidding this time.' onclick='game.auctionPass();' /><input type='button' value='Exit Auction' title='Stop bidding on " + s.name + " altogether.' onclick='if (confirm(\"Are you sure you want to stop bidding on this Azure service altogether?\")) game.auctionExit();' /></div>", "blank");
 
 		document.getElementById("propertyname").innerHTML = "<a href='javascript:void(0);' onmouseover='showdeed(" + auctionproperty + ");' onmouseout='hidedeed();' class='statscellcolor'>" + s.name + "</a>";
-		document.getElementById("highestbid").innerHTML = "0";
+		document.getElementById("highestbid").innerHTML = s.price;
 		document.getElementById("highestbidder").innerHTML = "N/A";
 		document.getElementById("currentbidder").innerHTML = player[currentbidder].name;
 		document.getElementById("bid").onkeydown = function (e) {
@@ -221,6 +221,9 @@ function Game() {
 
 			if (bid > player[currentbidder].money) {
 				document.getElementById("bid").value = "You don't have enough money to bid $" + bid + ".";
+				document.getElementById("bid").style.color = "red";
+			} else if (bid < square[auctionproperty].price) {
+				document.getElementById("bid").value = "Minimum bid is $" + square[auctionproperty].price + ".";
 				document.getElementById("bid").style.color = "red";
 			} else if (bid > highestbid) {
 				highestbid = bid;
@@ -377,7 +380,7 @@ function Game() {
 		for (var i = 0; i < 40; i++) {
 			currentSquare = square[i];
 
-			// A property cannot be traded if any properties in its group have been improved.
+			// A service cannot be traded if any services in its group have been improved.
 			if (currentSquare.house > 0 || currentSquare.groupNumber === 0) {
 				continue;
 			}
@@ -396,7 +399,7 @@ function Game() {
 				continue;
 			}
 
-			// Offered properties.
+			// Offered services.
 			if (currentSquare.owner === initiator.index) {
 				currentTableRow = initiatorSideTable.appendChild(document.createElement("tr"));
 				currentTableRow.onclick = tableRowOnClick;
@@ -430,7 +433,7 @@ function Game() {
 				}
 				currentTableCell.textContent = currentSquare.name;
 
-			// Requested properties.
+			// Requested services.
 			} else if (currentSquare.owner === recipient.index) {
 				currentTableRow = recipientSideTable.appendChild(document.createElement("tr"));
 				currentTableRow.onclick = tableRowOnClick;
@@ -553,13 +556,13 @@ function Game() {
 		if (initiatorSideTable.lastChild) {
 			initiatorProperty.appendChild(initiatorSideTable);
 		} else {
-			initiatorProperty.textContent = initiator.name + " has no properties to trade.";
+			initiatorProperty.textContent = initiator.name + " has no services to exchange.";
 		}
 
 		if (recipientSideTable.lastChild) {
 			recipientProperty.appendChild(recipientSideTable);
 		} else {
-			recipientProperty.textContent = recipient.name + " has no properties to trade.";
+			recipientProperty.textContent = recipient.name + " has no services to exchange.";
 		}
 
 		document.getElementById("trade-leftp-name").textContent = initiator.name;
@@ -783,7 +786,7 @@ function Game() {
 
 		var isAPropertySelected = 0;
 
-		// Ensure that some properties are selected.
+		// Ensure that some services are selected.
 		for (var i = 0; i < 40; i++) {
 			isAPropertySelected |= tradeObj.getProperty(i);
 		}
@@ -792,7 +795,7 @@ function Game() {
 		isAPropertySelected |= tradeObj.getChanceJailCard();
 
 		if (isAPropertySelected === 0) {
-			popup("<p>One or more properties must be selected in order to trade.</p>");
+			popup("<p>One or more services must be selected in order to exchange.</p>");
 
 			return false;
 		}
@@ -801,7 +804,7 @@ function Game() {
 			return false;
 		}
 
-		// Exchange properties
+		// Exchange services
 		for (var i = 0; i < 40; i++) {
 
 			if (tradeObj.getProperty(i) === 1) {
@@ -817,21 +820,21 @@ function Game() {
 		if (tradeObj.getCommunityChestJailCard() === 1) {
 			initiator.communityChestJailCard = false;
 			recipient.communityChestJailCard = true;
-			addAlert(recipient.name + ' received a "Get Out of Jail Free" card from ' + initiator.name + ".");
+			addAlert(recipient.name + ' received a "Get Out of Tech Support Free" card from ' + initiator.name + ".");
 		} else if (tradeObj.getCommunityChestJailCard() === -1) {
 			initiator.communityChestJailCard = true;
 			recipient.communityChestJailCard = false;
-			addAlert(initiator.name + ' received a "Get Out of Jail Free" card from ' + recipient.name + ".");
+			addAlert(initiator.name + ' received a "Get Out of Tech Support Free" card from ' + recipient.name + ".");
 		}
 
 		if (tradeObj.getChanceJailCard() === 1) {
 			initiator.chanceJailCard = false;
 			recipient.chanceJailCard = true;
-			addAlert(recipient.name + ' received a "Get Out of Jail Free" card from ' + initiator.name + ".");
+			addAlert(recipient.name + ' received a "Get Out of Tech Support Free" card from ' + initiator.name + ".");
 		} else if (tradeObj.getChanceJailCard() === -1) {
 			initiator.chanceJailCard = true;
 			recipient.chanceJailCard = false;
-			addAlert(initiator.name + ' received a "Get Out of Jail Free" card from ' + recipient.name + ".");
+			addAlert(initiator.name + ' received a "Get Out of Tech Support Free" card from ' + recipient.name + ".");
 		}
 
 		// Exchange money.
@@ -891,19 +894,18 @@ function Game() {
 			return false;
 		}
 
-		var isAPropertySelected = 0;
+		var isAServiceSelected = 0;
 
-		// Ensure that some properties are selected.
+		// Ensure that some services are selected.
 		for (var i = 0; i < 40; i++) {
 			reversedTradeProperty[i] = -tradeObj.getProperty(i);
-			isAPropertySelected |= tradeObj.getProperty(i);
+			isAServiceSelected |= tradeObj.getProperty(i);
 		}
 
-		isAPropertySelected |= tradeObj.getCommunityChestJailCard();
-		isAPropertySelected |= tradeObj.getChanceJailCard();
-
-		if (isAPropertySelected === 0) {
-			popup("<p>One or more properties must be selected in order to trade.</p>");
+		isAServiceSelected |= tradeObj.getCommunityChestJailCard();
+		isAServiceSelected |= tradeObj.getChanceJailCard();
+		if (isAServiceSelected === 0) {
+			popup("<p>One or more services must be selected in order to exchange.</p>");
 
 			return false;
 		}
@@ -1007,7 +1009,7 @@ function Game() {
 			return;
 		}
 
-		var HTML = "<p>" + player[p.creditor].name + ", you may unmortgage any of the following properties, interest free, by clicking on them. Click OK when finished.</p><table>";
+		var HTML = "<p>" + player[p.creditor].name + ", you may deallocate any of the following services, interest free, by clicking on them. Click OK when finished.</p><table>";
 		var price;
 
 		for (var i = 0; i < 40; i++) {
@@ -1059,7 +1061,7 @@ function Game() {
 		for (var i = 0; i < 40; i++) {
 			sq = square[i];
 			if (sq.owner == p.index) {
-				// Mortgaged properties will be tranfered by bankruptcyUnmortgage();
+				// Deallocated services will be tranfered by bankruptcyUnmortgage();
 				if (!sq.mortgage) {
 					sq.owner = p.creditor;
 				} else {
@@ -1097,8 +1099,8 @@ function Game() {
 		if (pcount === 2 || bankruptcyUnmortgageFee === 0 || p.creditor === 0) {
 			game.eliminatePlayer();
 		} else {
-			addAlert(pcredit.name + " paid $" + bankruptcyUnmortgageFee + " interest on the mortgaged properties received from " + p.name + ".");
-			popup("<p>" + pcredit.name + ", you must pay $" + bankruptcyUnmortgageFee + " interest on the mortgaged properties you received from " + p.name + ".</p>", function() {player[pcredit.index].pay(bankruptcyUnmortgageFee, 0); game.bankruptcyUnmortgage();});
+			addAlert(pcredit.name + " paid $" + bankruptcyUnmortgageFee + " interest on the deallocated services received from " + p.name + ".");
+			popup("<p>" + pcredit.name + ", you must pay $" + bankruptcyUnmortgageFee + " interest on the deallocated services you received from " + p.name + ".</p>", function() {player[pcredit.index].pay(bankruptcyUnmortgageFee, 0); game.bankruptcyUnmortgage();});
 		}
 	};
 
@@ -1111,7 +1113,7 @@ function Player(name, color) {
 	this.name = name;
 	this.color = color;
 	this.position = 0;
-	this.money = 2000;
+	this.money = 1500;
 	this.creditor = -1;
 	this.jail = false;
 	this.jailroll = 0;
@@ -1499,7 +1501,7 @@ function updateOwned() {
 			firstproperty = 40;
 			HTML += "<table>";
 		}
-		HTML += "<tr class='property-cell-row'><td class='propertycellcheckbox'><input type='checkbox' id='propertycheckbox40' /></td><td class='propertycellcolor' style='background: white;'></td><td class='propertycellname'>Get Out of Jail Free Card</td></tr>";
+		HTML += "<tr class='property-cell-row'><td class='propertycellcheckbox'><input type='checkbox' id='propertycheckbox40' /></td><td class='propertycellcolor' style='background: white;'></td><td class='propertycellname'>Get Out of Tech Support Free Card</td></tr>";
 
 	}
 	if (p.chanceJailCard) {
@@ -1507,11 +1509,11 @@ function updateOwned() {
 			firstproperty = 41;
 			HTML += "<table>";
 		}
-		HTML += "<tr class='property-cell-row'><td class='propertycellcheckbox'><input type='checkbox' id='propertycheckbox41' /></td><td class='propertycellcolor' style='background: white;'></td><td class='propertycellname'>Get Out of Jail Free Card</td></tr>";
+		HTML += "<tr class='property-cell-row'><td class='propertycellcheckbox'><input type='checkbox' id='propertycheckbox41' /></td><td class='propertycellcolor' style='background: white;'></td><td class='propertycellname'>Get Out of Tech Support Free Card</td></tr>";
 	}
 
 	if (HTML === "") {
-		HTML = p.name + ", you don't have any properties.";
+		HTML = p.name + ", you don't have any services deployed.";
 		$("#option").hide();
 	} else {
 		HTML += "</table>";
@@ -1690,9 +1692,9 @@ function updateOption() {
 
 			}
 
-			// Before a property can be mortgaged or sold, all the properties of its color-group must unimproved.
+			// Before a service can be deallocated or sold, all the s of its color-group must unimproved.
 			if (!allGroupUninproved) {
-				document.getElementById("mortgagebutton").title = "Before a property can be mortgaged, all the properties of its color-group must unimproved.";
+				document.getElementById("mortgagebutton").title = "Before a service can be deallocated, all the services of its color-group must unimproved.";
 				document.getElementById("mortgagebutton").disabled = true;
 			}
 
@@ -1789,7 +1791,7 @@ function addamount(amount, cause) {
 
 	p.money += amount;
 
-	addAlert(p.name + " received $" + amount + " from " + cause + ".");
+	addAlert(p.name + " received " + amount + " Credits from " + cause + ".");
 }
 
 function subtractamount(amount, cause) {
@@ -1797,12 +1799,12 @@ function subtractamount(amount, cause) {
 
 	p.pay(amount, 0);
 
-	addAlert(p.name + " lost $" + amount + " from " + cause + ".");
+	addAlert(p.name + " lost " + amount + " Credits from " + cause + ".");
 }
 
 function gotojail() {
 	var p = player[turn];
-	addAlert(p.name + " was sent directly to jail.");
+	addAlert(p.name + " opened a Tech Support Case and is held for review.");
 	document.getElementById("landed").innerHTML = "You are in Tech Support.";
 
 	p.jail = true;
@@ -2012,7 +2014,7 @@ function useJailCard() {
 		}
 	}
 
-	addAlert(p.name + " used a \"Get Out of Jail Free\" card.");
+	addAlert(p.name + " used a \"Get Out of Tech Support Free\" card.");
 	updateOwned();
 	updatePosition();
 }
@@ -2136,7 +2138,7 @@ function showStats() {
 				write = true;
 				HTML += "<table>";
 			}
-			HTML += "<tr><td class='statscellcolor'></td><td class='statscellname'>Get Out of Jail Free Card</td></tr>";
+			HTML += "<tr><td class='statscellcolor'></td><td class='statscellname'>Get Out of Tech Support Free Card</td></tr>";
 
 		}
 		if (p.chanceJailCard) {
@@ -2144,12 +2146,12 @@ function showStats() {
 				write = true;
 				HTML += "<table>";
 			}
-			HTML += "<tr><td class='statscellcolor'></td><td class='statscellname'>Get Out of Jail Free Card</td></tr>";
+			HTML += "<tr><td class='statscellcolor'></td><td class='statscellname'>Get Out of Tech Support Free Card</td></tr>";
 
 		}
 
 		if (!write) {
-			HTML += p.name + " dosen't have any properties.";
+			HTML += p.name + " doesn't have any services deployed.";
 		} else {
 			HTML += "</table>";
 		}
@@ -2303,6 +2305,100 @@ function land(increasedRent) {
 		}, "Yes/No");
 	}
 
+	// Just Checking Status (corner next to Tech Support): informational square
+	if (s.name && s.name.indexOf("Just Checking Status") !== -1) {
+		var p = player[turn];
+		var msg = p.jail ?
+			"You are in Tech Support. Resolve your case before you can leave." :
+			"You're just checking status. No action required.";
+		document.getElementById("landed").innerHTML = msg;
+		// Allow player to end the turn (no actions here)
+		document.getElementById('nextbutton').value = 'End turn';
+		document.getElementById('nextbutton').title = 'End turn and advance to the next player.';
+		if (p.human) { document.getElementById('nextbutton').focus(); }
+		return;
+	}
+
+	// Azure Licensing tax square: player chooses 10% of credits or flat 200 Credits
+	if (s.name && s.name.indexOf("Azure Licensing") !== -1) {
+		var pMoney = player[turn].money || 0;
+		var tenPercent = Math.floor(pMoney * 0.10);
+		var flatTax = 200;
+		var html = "<div><b>Azure Licensing</b></div>"
+			+ "<div style='margin-top:6px;'>Pay either 10% of your Credits (" + tenPercent + ") or a flat " + flatTax + " Credits.</div>"
+			+ "<div style='margin-top:10px;'><input type='button' value='Pay 10% (" + tenPercent + ")' onclick='window._payLicensingTax(" + tenPercent + ");' />"
+			+ "<span style='margin-left:8px;'></span><input type='button' value='Pay " + flatTax + " Credits' onclick='window._payLicensingTax(" + flatTax + ");' /></div>";
+		document.getElementById("landed").innerHTML = html;
+		window._payLicensingTax = function(amount) {
+			subtractamount(amount, "Azure Licensing");
+			// After payment, end turn
+			document.getElementById('nextbutton').value = 'End turn';
+			document.getElementById('nextbutton').title = 'End turn and advance to the next player.';
+			document.getElementById('nextbutton').focus();
+			// disable buttons to prevent duplicate payments
+			var btns = document.querySelectorAll("#landed input[type='button']");
+			for (var i = 0; i < btns.length; i++) { btns[i].disabled = true; }
+		};
+		return; // stop further processing for this square
+	}
+
+	// Explicit Azure Quiz squares: present a quiz immediately when landed (prefer hard-mode questions)
+	if (s.name && s.name.indexOf("Azure Quiz") !== -1) {
+		var qz = null;
+		if (typeof window.getNextAzureQuizHard === "function") {
+			qz = window.getNextAzureQuizHard();
+		} else if (typeof window.getNextAzureQuiz === "function") {
+			qz = window.getNextAzureQuiz();
+		}
+		if (qz) {
+			var quizAnswers = "";
+			for (var ai = 0; ai < qz.options.length; ai++) {
+				quizAnswers += "<div style='margin:6px 0;'><input type='button' class='azure-answer' value='" + (ai+1) + ". " + qz.options[ai].replace(/'/g, "&#39;") + "' onclick='window._azureQuizSquareAnswer(" + ai + ");' /></div>";
+			}
+			document.getElementById("landed").innerHTML = "<div>You landed on <span class='statscellcolor'>" + s.name + "</span>.<br/><div style='margin-top:8px; font-weight:bold;'>Azure Quiz:</div><div style='margin-top:4px;'>" + qz.question.replace(/'/g, "&#39;") + "</div>" + quizAnswers + "</div>";
+			var _answered = false;
+			window._azureQuizSquareAnswer = function(sel) {
+				if (_answered) { return; }
+				_answered = true;
+				if (sel === qz.answer) {
+					addAlert(p.name + " answered the Azure Quiz correctly. +50 Credits. Roll again!");
+					p.money += 50;
+					updateMoney();
+					// Offer immediate re-roll option (only once)
+					if (!window.__azureQuizRerollOffered) {
+						window.__azureQuizRerollOffered = true;
+						var rerollBtn = document.createElement('input');
+						rerollBtn.type = 'button';
+						rerollBtn.value = 'Roll dice again';
+						rerollBtn.title = 'Take another turn roll now';
+						rerollBtn.style.marginTop = '8px';
+						rerollBtn.onclick = function() {
+							// Prevent multiple rerolls
+							rerollBtn.disabled = true;
+							window.__azureQuizRerollOffered = false; // reset for future landings
+							if (typeof roll === 'function') {
+								roll();
+							}
+						};
+						document.getElementById('landed').appendChild(rerollBtn);
+					}
+				} else {
+					addAlert(p.name + " answered the Azure Quiz incorrectly. Turn ends.");
+					// Force end turn UI
+					document.getElementById('nextbutton').value = 'End turn';
+					document.getElementById('nextbutton').title = 'End turn and advance to the next player.';
+					document.getElementById('nextbutton').focus();
+				}
+				// Disable only quiz answer buttons to prevent re-clicks
+				var ansBtns = document.querySelectorAll("#landed input.azure-answer");
+				for (var k = 0; k < ansBtns.length; k++) { ansBtns[k].disabled = true; }
+			};
+		} else {
+			// No quiz available; simply inform and continue
+			document.getElementById("landed").innerHTML = "<div>You landed on <span class='statscellcolor'>" + s.name + "</span>.<div style='margin-top:6px;color:#555;'>No quiz available this session.</div></div>";
+		}
+	}
+
 	// Allow player to buy only if this square is a purchasable property
 	// Guard against undefined prices on non-purchasable squares (e.g., Azure Challenge/Quiz/Free Parking)
 	if (typeof s.price === "number" && s.price > 0 && s.owner === 0) {
@@ -2436,13 +2532,13 @@ function land(increasedRent) {
 		citytax();
 	}
 
-	// Go to jail. Go directly to Jail. Do not pass GO. Do not collect $200.
+	// Go to tech support. Go directly to Tech Support. Do not pass GO. Do not collect $200.
 	if (p.position === 30) {
 		updateMoney();
 		updatePosition();
 
 		if (p.human) {
-			popup("<div>Go to jail. Go directly to Jail. Do not pass GO. Do not collect $200.</div>", gotojail);
+			popup("<div>Go to tech support. Go directly to Tech Support. Do not pass GO. Do not collect $200.</div>", gotojail);
 		} else {
 			gotojail();
 		}
@@ -2818,7 +2914,11 @@ window.onload = function() {
 	var HTML = "";
 	for (var i = 0; i < 40; i++) {
 		HTML += "<div id='enlarge" + i + "' class='enlarge'>";
-		HTML += "<div id='enlarge" + i + "color' class='enlarge-color'></div><br /><div id='enlarge" + i + "name' class='enlarge-name'></div>";
+		HTML += "<div id='enlarge" + i + "color' class='enlarge-color'></div>";
+		if (square[i] && square[i].icon) {
+			HTML += "<div class='enlarge-icon'><img src='" + square[i].icon + "' alt='" + square[i].name + "' style='width: 40px; height: 40px; margin: 5px;' /></div>";
+		}
+		HTML += "<div id='enlarge" + i + "name' class='enlarge-name'></div>";
 		HTML += "<br /><div id='enlarge" + i + "price' class='enlarge-price'></div>";
 		HTML += "<br /><div id='enlarge" + i + "token' class='enlarge-token'></div></div>";
 	}
@@ -2850,10 +2950,26 @@ window.onload = function() {
 		currentCellName.className = "cell-name";
 		currentCellName.textContent = s.name;
 
+		// Add Azure service icon to cell if available
+		if (s.icon) {
+			var iconContainer = currentCellAnchor.appendChild(document.createElement("div"));
+			iconContainer.className = "cell-icon";
+			var iconImg = document.createElement("img");
+			iconImg.src = s.icon;
+			iconImg.alt = s.name;
+			iconImg.className = "cell-icon-img";
+			iconContainer.appendChild(iconImg);
+		}
+
 		if (square[i].groupNumber) {
 			currentCellOwner = currentCellAnchor.appendChild(document.createElement("div"));
 			currentCellOwner.id = "cell" + i + "owner";
 			currentCellOwner.className = "cell-owner";
+		}
+
+		// Set CSS custom property for hover color bar
+		if (s.color && s.color !== "#FFFFFF") {
+			currentCell.style.setProperty('--property-color', s.color);
 		}
 
 		document.getElementById("enlarge" + i + "color").style.backgroundColor = s.color;
@@ -2869,15 +2985,14 @@ window.onload = function() {
 
 	corrections();
 
-	// Jail corrections
+	// Tech Support corrections
 	$("<div>", {id: "jailpositionholder" }).appendTo("#jail");
-	$("<span>").text("Jail").appendTo("#jail");
+	$("<span>").text("Tech Support").appendTo("#jail");
 
 	document.getElementById("jail").enlargeId = "enlarge40";
 
-	document.getElementById("enlarge-wrap").innerHTML += "<div id='enlarge40' class='enlarge'><div id='enlarge40color' class='enlarge-color'></div><br /><div id='enlarge40name' class='enlarge-name'>Jail</div><br /><div id='enlarge40price' class='enlarge-price'><img src='images/jake_icon.png' height='80' width='80' alt='' style='position: relative; top: -20px;' /></div><br /><div id='enlarge40token' class='enlarge-token'></div></div>";
-
-	document.getElementById("enlarge40name").innerHTML = "Jail";
+	document.getElementById("enlarge-wrap").innerHTML += "<div id='enlarge40' class='enlarge'><div id='enlarge40color' class='enlarge-color'></div><br /><div id='enlarge40name' class='enlarge-name'>Tech Support</div><br /><div id='enlarge40price' class='enlarge-price'><img src='images/jake_icon.png' height='80' width='80' alt='' style='position: relative; top: -20px;' /></div><br /><div id='enlarge40token' class='enlarge-token'></div></div>";
+	document.getElementById("enlarge40name").innerHTML = "Tech Support";
 
 	// Create event handlers for hovering and draging.
 
