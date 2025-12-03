@@ -53,13 +53,14 @@ function Game() {
 
 
 	var finalizeAuction = function() {
-		var p = player[highestbidder];
-		var sq = square[auctionproperty];
-
-		if (highestbid > 0) {
+		if (highestbidder > 0 && highestbid > 0) {
+			var p = player[highestbidder];
+			var sq = square[auctionproperty];
 			p.pay(highestbid, 0);
 			sq.owner = highestbidder;
-			addAlert(p.name + " bought " + sq.name + " for $" + highestbid + ".");
+			addAlert(p.name + " bought " + sq.name + " for " + highestbid + " Credits.");
+		} else {
+			addAlert("No one bid on " + square[auctionproperty].name + ". Service remains undeployed.");
 		}
 
 		for (var i = 1; i <= pcount; i++) {
@@ -160,9 +161,7 @@ function Game() {
 	};
 
 	this.auctionPass = function() {
-		if (highestbidder === 0) {
-			highestbidder = currentbidder;
-		}
+		// Don't auto-assign highestbidder when passing - wait for actual bid
 
 		while (true) {
 			currentbidder++;
