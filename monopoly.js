@@ -170,7 +170,16 @@ function Game() {
 				currentbidder -= pcount;
 			}
 
-			if (currentbidder == highestbidder) {
+			// Check if we've cycled back to the highest bidder OR if all players have exited
+			var allExited = true;
+			for (var i = 1; i <= pcount; i++) {
+				if (player[i].bidding) {
+					allExited = false;
+					break;
+				}
+			}
+
+			if ((highestbidder > 0 && currentbidder == highestbidder) || allExited) {
 				finalizeAuction();
 				return;
 			} else if (player[currentbidder].bidding) {
